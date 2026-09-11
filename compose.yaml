@@ -1,0 +1,38 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-archive}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-archive}
+      POSTGRES_DB: ${POSTGRES_DB:-archive}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U archive -d archive -h 127.0.0.1"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+
+  archive-web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      APP_ENV: ${APP_ENV:-development}
+      APP_ADDR: :8080
+      APP_BASE_URL: ${APP_BASE_URL:-http://localhost:8080}
+      DATABASE_URL: ${DATABASE_URL:-postgres://archive:archive@127.0.0.1:5432/archive?sslmode=disable}
+      SESSION_SECRET: ${SESSION_SECRET:-dev-secret-change-in-production-min-32-chars}
+      STORAGE_DIR: /app/data/storage
+      MAX_UPLOAD_MB: ${MAX_UPLOAD_MB:-25}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres_data:

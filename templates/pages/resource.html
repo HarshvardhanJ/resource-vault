@@ -1,0 +1,86 @@
+{{ define "content" }}
+<div class="breadcrumb">
+  <a href="/">Home</a>
+  <span class="sep">&rsaquo;</span>
+  <a href="/courses/{{ .Resource.CourseCode }}">{{ .Resource.CourseCode }}</a>
+  <span class="sep">&rsaquo;</span>
+  <span class="mono"><strong>{{ .Resource.AcademicYearDisplay }} {{ .Resource.ExamType }}</strong></span>
+</div>
+
+<div class="detail-card">
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px;">
+    <div>
+      <div class="mono" style="font-size: 0.85rem; color: var(--accent-navy); margin-bottom: 4px;">
+        <a href="/courses/{{ .Resource.CourseCode }}"><strong>{{ .Resource.CourseCode }}</strong></a> &mdash; {{ .Resource.CourseName }}
+      </div>
+      <h1 style="margin: 0;">{{ .Resource.Title }}</h1>
+    </div>
+    <div style="display: flex; gap: 8px; align-items: center;">
+      <a href="/resources/{{ .Resource.ID }}/download" class="btn btn-primary" download>Download PDF ({{ .Resource.FileSizeDisplay }})</a>
+      <a href="/reports/new?resource={{ .Resource.ID }}" class="btn btn-sm" style="color: var(--accent-crimson);">Report Issue</a>
+    </div>
+  </div>
+
+  <div class="meta-grid">
+    <div class="meta-item">
+      <span class="meta-label">Course Code</span>
+      <span class="meta-val mono"><a href="/courses/{{ .Resource.CourseCode }}">{{ .Resource.CourseCode }}</a></span>
+    </div>
+    <div class="meta-item">
+      <span class="meta-label">Academic Year</span>
+      <span class="meta-val mono">{{ .Resource.AcademicYearDisplay }}</span>
+    </div>
+    <div class="meta-item">
+      <span class="meta-label">Semester</span>
+      <span class="meta-val mono">{{ .Resource.Semester }}</span>
+    </div>
+    <div class="meta-item">
+      <span class="meta-label">Exam Type</span>
+      <span class="meta-val">
+        <span class="tag {{ if eq .Resource.ExamType "ENDSEM" }}tag-endsem{{ else if eq .Resource.ExamType "MIDSEM" }}tag-midsem{{ else }}tag-quiz{{ end }}">
+          {{ .Resource.ExamType }}
+        </span>
+      </span>
+    </div>
+    <div class="meta-item">
+      <span class="meta-label">Branches</span>
+      <span class="meta-val">
+        {{ range .Resource.BranchCodes }}
+          <span class="tag">{{ . }}</span>
+        {{ else }}
+          <span class="tag">General</span>
+        {{ end }}
+      </span>
+    </div>
+    <div class="meta-item">
+      <span class="meta-label">Format / Size</span>
+      <span class="meta-val mono">PDF &bull; {{ .Resource.FileSizeDisplay }}</span>
+    </div>
+    <div class="meta-item">
+      <span class="meta-label">Publication Status</span>
+      <span class="meta-val mono" style="color: #137333;">&#10003; PUBLISHED</span>
+    </div>
+    <div class="meta-item" style="grid-column: 1 / -1;">
+      <span class="meta-label">SHA-256 Checksum</span>
+      <span class="meta-val mono" style="font-size: 0.75rem; word-break: break-all;">{{ .Resource.SHA256 }}</span>
+    </div>
+  </div>
+</div>
+
+<div class="section-header">
+  <h2>Document Preview</h2>
+  <span class="section-meta mono">Embedded PDF Viewer</span>
+</div>
+
+<div class="pdf-preview-box">
+  <iframe src="/resources/{{ .Resource.ID }}/preview" title="PDF Document Preview" loading="lazy">
+    <p>Your browser does not support embedded PDF frames. <a href="/resources/{{ .Resource.ID }}/download">Click here to download the PDF</a>.</p>
+  </iframe>
+</div>
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px;">
+  <a href="/courses/{{ .Resource.CourseCode }}" class="btn btn-sm">&larr; Back to {{ .Resource.CourseCode }} papers</a>
+  <a href="/resources/{{ .Resource.ID }}/download" class="btn btn-primary" download>Download PDF ({{ .Resource.FileSizeDisplay }})</a>
+</div>
+
+{{ end }}

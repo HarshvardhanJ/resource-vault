@@ -1,0 +1,49 @@
+{{ define "resource_table.html" }}
+{{ if . }}
+<div class="table-wrapper">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th style="width: 90px;">Year</th>
+        <th style="width: 60px;">Sem</th>
+        <th style="width: 90px;">Exam</th>
+        <th style="width: 100px;">Course</th>
+        <th>Paper Title</th>
+        <th style="width: 80px;">Size</th>
+        <th style="width: 140px; text-align: right;">Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{ range . }}
+      <tr>
+        <td class="mono"><strong>{{ .AcademicYearDisplay }}</strong></td>
+        <td class="mono">{{ .Semester }}</td>
+        <td>
+          <span class="tag {{ if eq .ExamType "ENDSEM" }}tag-endsem{{ else if eq .ExamType "MIDSEM" }}tag-midsem{{ else }}tag-quiz{{ end }}">
+            {{ .ExamType }}
+          </span>
+        </td>
+        <td class="mono">
+          <a href="/courses/{{ .CourseCode }}"><strong>{{ .CourseCode }}</strong></a>
+        </td>
+        <td>
+          <a href="/resources/{{ .ID }}">{{ .Title }}</a>
+        </td>
+        <td class="mono text-muted" style="font-size: 0.8rem;">
+          {{ .FileSizeDisplay }}
+        </td>
+        <td style="text-align: right; white-space: nowrap;">
+          <a href="/resources/{{ .ID }}" class="btn btn-sm">View</a>
+          <a href="/resources/{{ .ID }}/download" class="btn btn-sm btn-primary">PDF</a>
+        </td>
+      </tr>
+      {{ end }}
+    </tbody>
+  </table>
+</div>
+{{ else }}
+<div class="intro-box">
+  <p><em>No question papers found matching the specified criteria.</em></p>
+</div>
+{{ end }}
+{{ end }}

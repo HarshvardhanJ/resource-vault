@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ if .Title }}{{ .Title }} — NITC PYQ Archive{{ else }}NITC PYQ Archive — NIT Calicut Academic Papers{{ end }}</title>
+  <link rel="stylesheet" href="/static/css/main.css">
+  <script src="/static/vendor/htmx.min.js"></script>
+  <script src="/static/js/app.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <div class="brand-title">
+        <a href="/" class="brand-name">NITC PYQ ARCHIVE</a>
+        <span class="brand-badge">ARCHIVAL V1</span>
+      </div>
+      <nav class="site-nav" aria-label="Main Navigation">
+        <a href="/" class="nav-link">Home</a>
+        <a href="/search" class="nav-link">Search</a>
+        <a href="/contribute" class="nav-link" title="Requires @nitc.ac.in Google account">Contribute</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <div class="container">
+      {{ template "content" . }}
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p><strong>NITC PYQ Archive</strong> — Independent student &amp; community-run academic archive for NIT Calicut.</p>
+      <p>Principle: <em>Open to read. Verified to contribute. Built to last.</em></p>
+      <div class="disclaimer-box">
+        Disclaimer: This archive is an independent student project and is not officially affiliated with, sponsored by, or endorsed by the National Institute of Technology Calicut. To report any inaccurate metadata or dispute material, use the "Report Resource" link on the corresponding paper detail page.
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

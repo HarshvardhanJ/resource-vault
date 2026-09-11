@@ -1,0 +1,55 @@
+{{ define "content" }}
+<div class="breadcrumb">
+  <a href="/">Home</a>
+  <span class="sep">&rsaquo;</span>
+  <span>Search Archive</span>
+</div>
+
+<div class="intro-box">
+  <h1>Search Archive</h1>
+  <p>Search across course codes, subject names, years, and exam types. Filter live or browse paginated results.</p>
+</div>
+
+<div class="search-container">
+  <form action="/search" method="GET" class="search-form"
+        hx-get="/search" 
+        hx-trigger="input changed delay:350ms, change" 
+        hx-target="#search-results-wrapper"
+        hx-push-url="true"
+        hx-indicator="#search-loading">
+    <div class="search-input-group" style="flex: 2;">
+      <input type="search" name="q" value="{{ .Query }}" placeholder="Type course code, name, or keywords..." autofocus>
+    </div>
+
+    <div style="flex: 1; min-width: 140px;">
+      <select name="exam_type">
+        <option value="">All Exam Types</option>
+        <option value="ENDSEM" {{ if eq .ExamType "ENDSEM" }}selected{{ end }}>End-Semester</option>
+        <option value="MIDSEM" {{ if eq .ExamType "MIDSEM" }}selected{{ end }}>Mid-Semester</option>
+        <option value="QUIZ" {{ if eq .ExamType "QUIZ" }}selected{{ end }}>Quiz</option>
+        <option value="OTHER" {{ if eq .ExamType "OTHER" }}selected{{ end }}>Other</option>
+      </select>
+    </div>
+
+    <div style="flex: 1; min-width: 110px;">
+      <select name="semester">
+        <option value="">All Semesters</option>
+        <option value="S1" {{ if eq .Semester "S1" }}selected{{ end }}>S1</option>
+        <option value="S2" {{ if eq .Semester "S2" }}selected{{ end }}>S2</option>
+        <option value="S3" {{ if eq .Semester "S3" }}selected{{ end }}>S3</option>
+        <option value="S4" {{ if eq .Semester "S4" }}selected{{ end }}>S4</option>
+        <option value="S5" {{ if eq .Semester "S5" }}selected{{ end }}>S5</option>
+        <option value="S6" {{ if eq .Semester "S6" }}selected{{ end }}>S6</option>
+        <option value="S7" {{ if eq .Semester "S7" }}selected{{ end }}>S7</option>
+        <option value="S8" {{ if eq .Semester "S8" }}selected{{ end }}>S8</option>
+      </select>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Filter</button>
+    <span id="search-loading" class="htmx-indicator" style="align-self: center;">Searching...</span>
+  </form>
+</div>
+
+{{ template "search_results.html" . }}
+
+{{ end }}

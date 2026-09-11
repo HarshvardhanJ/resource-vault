@@ -1,0 +1,27 @@
+{{ define "content" }}
+<div class="breadcrumb">
+  <a href="/">Home</a>
+  <span class="sep">&rsaquo;</span>
+  <span>Contribute</span>
+</div>
+
+<div class="intro-box">
+  <h1>Contribute Examination Papers</h1>
+  <p>Help your fellow students by archiving previous-year question papers.</p>
+</div>
+
+<div class="detail-card">
+  <h2>Contributor Verification Required</h2>
+  <p>To preserve catalog integrity and prevent spam, uploading is restricted to current students and faculty of NIT Calicut.</p>
+  
+  <div style="background-color: var(--bg-secondary); border: 1px solid var(--border-color); padding: 16px; margin: 16px 0;">
+    <p style="margin: 0 0 8px 0;"><strong>Requirements:</strong></p>
+    <ul style="margin: 0 0 12px 0; padding-left: 20px;">
+      <li>Must authenticate with your institutional Google Workspace account (<strong>@nitc.ac.in</strong>).</li>
+      <li>Files must be valid PDF documents.</li>
+      <li>All submitted papers are reviewed by archive moderators before public listing.</li>
+    </ul>
+    <a href="/login/google" class="btn btn-primary">Sign in with NITC Google Account &rarr;</a>
+  </div>
+</div>
+{{ end }}

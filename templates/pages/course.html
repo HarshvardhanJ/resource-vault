@@ -1,0 +1,65 @@
+{{ define "content" }}
+<div class="breadcrumb">
+  <a href="/">Home</a>
+  <span class="sep">&rsaquo;</span>
+  <span>Courses</span>
+  <span class="sep">&rsaquo;</span>
+  <span class="mono"><strong>{{ .Course.Code }}</strong></span>
+</div>
+
+<div class="intro-box">
+  <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px;">
+    <h1>{{ .Course.Code }} &mdash; {{ .Course.Name }}</h1>
+    <a href="/contribute?course={{ .Course.Code }}" class="btn btn-sm btn-primary">+ Contribute Paper</a>
+  </div>
+  {{ if .Course.Description }}
+  <p>{{ .Course.Description }}</p>
+  {{ end }}
+  <div style="margin-top: 8px; font-size: 0.85rem;">
+    <strong>Mapped Branches:</strong>
+    {{ range .Course.Branches }}
+      <a href="/branches/{{ .Code }}" class="tag">{{ .Code }}</a>
+    {{ else }}
+      <span class="text-muted">General / Institutional</span>
+    {{ end }}
+  </div>
+</div>
+
+<div class="filter-bar">
+  <form method="GET" action="/courses/{{ .Course.Code }}" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; width: 100%;">
+    <label for="exam_type" style="font-size: 0.85rem; font-weight: 600;">Filter Exam:</label>
+    <select name="exam_type" id="exam_type" onchange="this.form.submit()">
+      <option value="" {{ if eq .SelectedExamType "" }}selected{{ end }}>All Exam Types</option>
+      <option value="ENDSEM" {{ if eq .SelectedExamType "ENDSEM" }}selected{{ end }}>End-Semester</option>
+      <option value="MIDSEM" {{ if eq .SelectedExamType "MIDSEM" }}selected{{ end }}>Mid-Semester</option>
+      <option value="QUIZ" {{ if eq .SelectedExamType "QUIZ" }}selected{{ end }}>Quiz / Test</option>
+      <option value="OTHER" {{ if eq .SelectedExamType "OTHER" }}selected{{ end }}>Other</option>
+    </select>
+
+    <label for="semester" style="font-size: 0.85rem; font-weight: 600;">Semester:</label>
+    <select name="semester" id="semester" onchange="this.form.submit()">
+      <option value="" {{ if eq .SelectedSemester "" }}selected{{ end }}>All Semesters</option>
+      <option value="S1" {{ if eq .SelectedSemester "S1" }}selected{{ end }}>S1</option>
+      <option value="S2" {{ if eq .SelectedSemester "S2" }}selected{{ end }}>S2</option>
+      <option value="S3" {{ if eq .SelectedSemester "S3" }}selected{{ end }}>S3</option>
+      <option value="S4" {{ if eq .SelectedSemester "S4" }}selected{{ end }}>S4</option>
+      <option value="S5" {{ if eq .SelectedSemester "S5" }}selected{{ end }}>S5</option>
+      <option value="S6" {{ if eq .SelectedSemester "S6" }}selected{{ end }}>S6</option>
+      <option value="S7" {{ if eq .SelectedSemester "S7" }}selected{{ end }}>S7</option>
+      <option value="S8" {{ if eq .SelectedSemester "S8" }}selected{{ end }}>S8</option>
+    </select>
+
+    {{ if or .SelectedExamType .SelectedSemester .SelectedYear }}
+    <a href="/courses/{{ .Course.Code }}" class="btn btn-sm" style="margin-left: auto;">Reset Filters</a>
+    {{ end }}
+  </form>
+</div>
+
+<div class="section-header">
+  <h2>Archived Examination Papers</h2>
+  <span class="section-meta mono">{{ len .Resources }} paper(s)</span>
+</div>
+
+{{ template "resource_table.html" .Resources }}
+
+{{ end }}

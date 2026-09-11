@@ -1,0 +1,61 @@
+{{ define "content" }}
+<div class="breadcrumb">
+  <a href="/">Home</a>
+  <span class="sep">&rsaquo;</span>
+  <span>Branches</span>
+  <span class="sep">&rsaquo;</span>
+  <span class="mono"><strong>{{ .Branch.Code }}</strong></span>
+</div>
+
+<div class="intro-box">
+  <h1>{{ .Branch.Code }} &mdash; {{ .Branch.Name }}</h1>
+  <p>Listing all active courses and curriculum modules configured for {{ .Branch.Name }}. Select a course to view available previous-year examination papers.</p>
+</div>
+
+<div class="section-header">
+  <h2>Courses ({{ len .Courses }})</h2>
+  <span class="section-meta mono">{{ .Branch.Code }} Curriculum</span>
+</div>
+
+{{ if .Courses }}
+<div class="table-wrapper">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th style="width: 140px;">Course Code</th>
+        <th>Course Name</th>
+        <th style="width: 130px; text-align: center;">Available PYQs</th>
+        <th style="width: 120px; text-align: right;">Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{ range .Courses }}
+      <tr>
+        <td class="mono"><strong><a href="/courses/{{ .Code }}">{{ .Code }}</a></strong></td>
+        <td>
+          <a href="/courses/{{ .Code }}">{{ .Name }}</a>
+          {{ if .Description }}
+          <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">{{ .Description }}</div>
+          {{ end }}
+        </td>
+        <td class="mono" style="text-align: center;">
+          {{ if gt .ResourceCount 0 }}
+          <span class="tag tag-midsem">{{ .ResourceCount }} papers</span>
+          {{ else }}
+          <span style="color: var(--text-dim); font-size: 0.8rem;">0 papers</span>
+          {{ end }}
+        </td>
+        <td style="text-align: right;">
+          <a href="/courses/{{ .Code }}" class="btn btn-sm">View Papers &rarr;</a>
+        </td>
+      </tr>
+      {{ end }}
+    </tbody>
+  </table>
+</div>
+{{ else }}
+<div class="intro-box">
+  <p><em>No courses mapped to this branch yet.</em></p>
+</div>
+{{ end }}
+{{ end }}

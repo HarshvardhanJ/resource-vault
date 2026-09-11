@@ -1,0 +1,48 @@
+{{ define "content" }}
+<div class="breadcrumb">
+  <a href="/">Home</a>
+  <span class="sep">&rsaquo;</span>
+  <span>Report Resource</span>
+</div>
+
+<div class="intro-box">
+  <h1>Report Resource Issue</h1>
+  <p>If this examination paper contains incorrect metadata, corrupt pages, copyright disputes, or unpermitted content, let the archive moderators know.</p>
+</div>
+
+<div class="detail-card" style="max-width: 600px;">
+  {{ if .Submitted }}
+  <div style="background-color: #e6f4ea; border: 1px solid #ceead6; padding: 16px; color: #137333;">
+    <strong>Thank you.</strong> Your report has been submitted to the archive moderators for review.
+    <div style="margin-top: 12px;">
+      <a href="/" class="btn btn-sm">&larr; Return to Home</a>
+    </div>
+  </div>
+  {{ else }}
+  <form action="/reports" method="POST">
+    <input type="hidden" name="resource_id" value="{{ .ResourceID }}">
+
+    <div style="margin-bottom: 14px;">
+      <label for="category" style="display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 4px;">Reason for Report:</label>
+      <select name="category" id="category" required style="width: 100%;">
+        <option value="INCORRECT_METADATA">Incorrect Metadata (Wrong course, year, or exam type)</option>
+        <option value="CORRUPT_FILE">Corrupt or Unreadable PDF</option>
+        <option value="COPYRIGHT_DISPUTE">Copyright / Content Dispute</option>
+        <option value="DUPLICATE">Duplicate of Another Resource</option>
+        <option value="OTHER">Other Issue</option>
+      </select>
+    </div>
+
+    <div style="margin-bottom: 16px;">
+      <label for="message" style="display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 4px;">Additional Details (Optional):</label>
+      <textarea name="message" id="message" rows="4" style="width: 100%; border: 1px solid var(--border-dark); font-family: inherit; font-size: 0.9rem; padding: 6px;"></textarea>
+    </div>
+
+    <div style="display: flex; gap: 8px;">
+      <button type="submit" class="btn btn-primary">Submit Report</button>
+      <a href="javascript:history.back()" class="btn">Cancel</a>
+    </div>
+  </form>
+  {{ end }}
+</div>
+{{ end }}

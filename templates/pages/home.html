@@ -1,0 +1,38 @@
+{{ define "content" }}
+<div class="intro-box">
+  <h1>NITC Previous-Year Question Papers</h1>
+  <p>An open, fast, and structured academic archive organized by branch, course, semester, academic year, and exam type. Free to browse, preview, and download without an account.</p>
+</div>
+
+<div class="search-container">
+  <form action="/search" method="GET" class="search-form">
+    <div class="search-input-group">
+      <input type="search" name="q" placeholder="Search course code (e.g. CS201), course name, or keyword... [press / to focus]" autofocus>
+    </div>
+    <button type="submit" class="btn btn-primary">Search Archive</button>
+  </form>
+</div>
+
+<div class="section-header">
+  <h2>Academic Branches</h2>
+  <span class="section-meta mono">{{ len .Branches }} departments</span>
+</div>
+
+<div class="branch-grid">
+  {{ range .Branches }}
+  <a href="/branches/{{ .Code }}" class="branch-card">
+    <span class="branch-code">{{ .Code }}</span>
+    <span class="branch-name">{{ .Name }}</span>
+    <span class="branch-count">{{ .CourseCount }} courses</span>
+  </a>
+  {{ end }}
+</div>
+
+<div class="section-header">
+  <h2>Recently Added Papers</h2>
+  <a href="/search" class="mono" style="font-size: 0.85rem;">View all &rarr;</a>
+</div>
+
+{{ template "resource_table.html" .RecentPYQs }}
+
+{{ end }}
