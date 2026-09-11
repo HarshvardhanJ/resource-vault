@@ -1,179 +1,213 @@
 # OCI Always Free Deployment & Operations Guide
 
-This guide details the end-to-end setup and production operations for the **NITC PYQ Archive** on an **Oracle Cloud Infrastructure (OCI) Always Free** Ampere A1 VM.
+This guide details deployment of **NITC Resource Vault** on an **Oracle Cloud Infrastructure (OCI) Always Free** Ampere A1 VM.
 
----
+## 1. Target topology
 
-## 1. OCI Ampere A1 VM Provisioning
+```text
+OCI Ampere A1 VM
+├── Caddy :80/:443
+├── archive-web :8080
+└── PostgreSQL (private Docker network + persistent volume)
 
-1. Log in to the OCI Console (ensure you are in your tenancy's **Home Region**).
-2. Navigate to **Compute &rsaquo; Instances &rsaquo; Create Instance**.
-3. Choose:
-   - **Name**: `nitc-pyq-archive-vm`
-   - **Image**: Ubuntu 24.04 LTS (or Ubuntu 22.04 LTS) **ARM64**
-   - **Shape**: `VM.Standard.A1.Flex`
-   - **OCPUs**: `2`
-   - **Memory**: `12 GB`
-   - **Boot Volume**: `50 GB`
-4. Add your SSH Public Key (`~/.ssh/id_ed25519.pub`).
-5. Click **Create** and note the Assigned Public IP.
-
----
-
-## 2. VCN & Firewall Security Rules
-
-1. In OCI Console, go to **Networking &rsaquo; Virtual Cloud Networks &rsaquo; [Your VCN] &rsaquo; Security Lists &rsaquo; Default Security List**.
-2. Add the following **Ingress Rules** (CIDR `0.0.0.0/0`):
-   - **Port 22** (TCP): SSH access (or restrict to your personal IP)
-   - **Port 80** (TCP): HTTP (for Let's Encrypt ACME challenges)
-   - **Port 443** (TCP): HTTPS (secure public traffic)
-3. SSH into the VM:
-   ```bash
-   ssh -i ~/.ssh/id_ed25519 ubuntu@<PUBLIC_IP>
-   ```
-4. Open the host-level Ubuntu `iptables` / `ufw` firewall:
-   ```bash
-   sudo iptables -I INPUT 6 -m state --state NEW -p tcp --dport 80 -j ACCEPT
-   sudo iptables -I INPUT 6 -m state --state NEW -p tcp --dport 443 -j ACCEPT
-   sudo netfilter-persistent save
-   ```
-
----
-
-## 3. Install Docker & Docker Compose
-
-Run on the VM:
-```bash
-sudo apt-get update && sudo apt-get install -y ca-certificates curl gnupg
-sudo install -m 0755 -d /etc/apt/keyrings
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-sudo chmod a+r /etc/apt/keyrings/docker.gpg
-
-echo \
-  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
-  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
-  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-
-sudo apt-get update
-sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-sudo usermod -aG docker ubuntu
+archive-web
+├── Google OIDC
+└── Internet Archive (published PDFs)
 ```
 
----
+App and PostgreSQL intentionally live on one VM. Published PDF bytes live in Internet Archive.
 
-## 4. DNS Configuration
+## 2. OCI VM provisioning
 
-Add an `A` record in your DNS provider pointing your domain or subdomain (e.g. `pyq.nitc.ac.in` or `archive.example.org`) to the OCI VM's Public IP.
+Use the OCI Always Free Ampere A1 Flex shape. Target 2 OCPUs and 12 GB RAM within the current Always Free allocation, with a modest boot volume.
 
----
+Use an ARM64-capable Ubuntu image. The production Docker image must build/run on ARM64.
 
-## 5. Deployment Setup
+## 3. OCI firewall / network rules
 
-1. Clone the repository into `/opt/archive`:
-   ```bash
-   sudo mkdir -p /opt/archive && sudo chown ubuntu:ubuntu /opt/archive
-   git clone <REPO_URL> /opt/archive
-   cd /opt/archive
-   ```
-2. Create production `.env`:
-   ```bash
-   cp .env.example .env
-   ```
-3. Edit `.env` with secure secrets:
-   ```bash
-   APP_ENV=production
-   APP_ADDR=:8080
-   APP_BASE_URL=https://your-domain.org
-   DATABASE_URL=postgres://archive:STRONG_RANDOM_PASSWORD@postgres:5432/archive?sslmode=disable
-   POSTGRES_USER=archive
-   POSTGRES_PASSWORD=STRONG_RANDOM_PASSWORD
-   POSTGRES_DB=archive
-   SESSION_SECRET=$(openssl rand -hex 32)
-   LOG_LEVEL=info
-   ```
+Public ingress:
 
----
+- TCP 80
+- TCP 443
+- TCP 22 for SSH; restrict SSH source where practical.
 
-## 6. Production Caddy Reverse Proxy Configuration
+Do **not** expose TCP 5432. PostgreSQL must only be reachable through the Docker network.
 
-Create `Caddyfile` in `/opt/archive/Caddyfile`:
-```caddy
-your-domain.org {
-    reverse_proxy archive-web:8080
-    encode zstd gzip
+Also configure the host firewall consistently with the OCI security list.
 
-    header {
-        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
-        X-Content-Type-Options "nosniff"
-        X-Frame-Options "SAMEORIGIN"
-        Referrer-Policy "strict-origin-when-cross-origin"
-    }
-}
-```
+## 4. Install Docker
 
-Add Caddy service to production compose:
-```yaml
-  caddy:
-    image: caddy:2-alpine
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile
-      - caddy_data:/data
-      - caddy_config:/config
-    depends_on:
-      - archive-web
-```
+Install Docker Engine, Buildx, and the Docker Compose plugin using Docker's official Ubuntu repository.
 
----
+After installation, add the deployment user to the `docker` group and reconnect the SSH session.
 
-## 7. Starting the Stack & Migrations
+## 5. Checkout
 
 ```bash
-docker compose up -d postgres
-# Migrations and schema creation run automatically upon web app boot:
-docker compose up -d --build archive-web
+git clone https://github.com/HarshvardhanJ/resource-vault.git /opt/resource-vault
+cd /opt/resource-vault
 ```
 
-To seed initial branches, courses, and sample data:
+## 6. Production environment
+
+```bash
+cp .env.example .env
+chmod 600 .env
+```
+
+Set real values:
+
+```text
+APP_ENV=production
+APP_ADDR=:8080
+APP_BASE_URL=https://YOUR_DOMAIN
+DATABASE_URL=postgres://archive:STRONG_PASSWORD@postgres:5432/archive?sslmode=disable
+POSTGRES_USER=archive
+POSTGRES_PASSWORD=STRONG_PASSWORD
+POSTGRES_DB=archive
+SESSION_SECRET=<long random secret>
+MAX_UPLOAD_MB=25
+LOG_LEVEL=info
+
+GOOGLE_CLIENT_ID=...
+GOOGLE_CLIENT_SECRET=...
+GOOGLE_REDIRECT_URL=https://YOUR_DOMAIN/auth/google/callback
+GOOGLE_HOSTED_DOMAIN=nitc.ac.in
+
+IA_ACCESS_KEY=...
+IA_SECRET_KEY=...
+IA_COLLECTION=...
+IA_IDENTIFIER_PREFIX=nitc-resource-vault
+```
+
+Never commit `.env` or real credentials.
+
+## 7. Google OAuth
+
+Configure a Google OAuth/OIDC client with the exact production callback:
+
+`https://YOUR_DOMAIN/auth/google/callback`
+
+The backend must validate the provider's signed identity and enforce the configured NITC Workspace domain. The `GOOGLE_HOSTED_DOMAIN` value is a server-side authorization policy, not merely a UI hint.
+
+## 8. Internet Archive
+
+Create the project's IA collection/item strategy before enabling public contributions.
+
+The app database is authoritative for catalog/moderation state. Internet Archive stores published bytes.
+
+The application must never expose IA credentials to the browser.
+
+An approved resource becomes public only after successful IA ingestion. Failed ingestion remains retryable/reconcilable.
+
+## 9. Caddy
+
+Create `deploy/Caddyfile` from `deploy/Caddyfile.example`, replacing the example hostname.
+
+The production Compose file publishes Caddy on ports 80/443 and keeps the Go app bound to localhost:8080 on the host.
+
+Caddy terminates TLS and reverse proxies to the Go service.
+
+## 10. Start
+
+```bash
+docker compose --profile production up -d --build
+```
+
+Check:
+
+```bash
+docker compose ps
+curl -i https://YOUR_DOMAIN/healthz
+```
+
+Logs:
+
+```bash
+docker compose logs -f archive-web
+docker compose logs -f caddy
+docker compose logs -f postgres
+```
+
+## 11. Migrations
+
+The application contains an embedded migration runner and applies only unapplied migrations.
+
+For an explicit run:
+
+```bash
+docker compose exec archive-web /app/archive -migrate
+```
+
+Production migrations must never drop/recreate existing data automatically.
+
+## 12. Seed data
+
+Seed the canonical academic-unit list and only verified course data.
+
 ```bash
 docker compose run --rm archive-web /app/archive -seed
 ```
 
----
+Do not seed invented course codes/names merely to make the UI look populated.
 
-## 8. Backup & Restore Operations
+## 13. PostgreSQL backups
 
-### Daily PostgreSQL Backup
-Automate via crontab:
-```bash
-crontab -e
-```
-Add:
-```bash
-0 2 * * * docker compose -f /opt/archive/compose.yaml exec -T postgres pg_dump -U archive archive | gzip > /opt/backups/pg_dump_$(date +\%F).sql.gz
-```
+Create a daily dump outside the database container and replicate it away from the VM.
 
-### Restoring from Backup
+Example:
+
 ```bash
-gunzip < /opt/backups/pg_dump_YYYY-MM-DD.sql.gz | docker compose exec -T postgres psql -U archive -d archive
+mkdir -p /opt/backups/resource-vault
+docker compose exec -T postgres pg_dump -U archive -d archive \
+  | gzip > /opt/backups/resource-vault/archive-$(date +%F).sql.gz
 ```
 
----
+Use a cron/systemd timer after the manual procedure is verified.
 
-## 9. Inspecting Logs & Monitoring
+Test restoration periodically.
 
-- View web logs:
-  ```bash
-  docker compose logs -f archive-web
-  ```
-- View database logs:
-  ```bash
-  docker compose logs -f postgres
-  ```
-- Check application health:
-  ```bash
-  curl -i http://localhost:8080/healthz
-  ```
+## 14. Restore
+
+For a clean recovery VM, restore into an initialized PostgreSQL container:
+
+```bash
+gunzip < /opt/backups/resource-vault/archive-YYYY-MM-DD.sql.gz \
+  | docker compose exec -T postgres psql -U archive -d archive
+```
+
+Do not restore over production blindly; verify target database and backup timestamp first.
+
+## 15. Updates
+
+```bash
+git pull --ff-only
+docker compose --profile production up -d --build
+docker compose ps
+```
+
+Review recent logs after deployment.
+
+## 16. Destructive command warning
+
+Never run this on production unless intentionally destroying the database:
+
+```bash
+docker compose down -v
+```
+
+The PostgreSQL data volume is part of the live system and is not a backup.
+
+## 17. Recovery model
+
+The initial architecture is intentionally single-node. If the VM is lost:
+
+1. Provision another OCI A1 VM.
+2. Install Docker/Compose.
+3. Clone the repository.
+4. Restore the PostgreSQL backup.
+5. Restore `.env`/secrets from the secure secret source.
+6. Start the Compose production profile.
+7. Point DNS at the replacement VM.
+
+Published PDFs remain in Internet Archive independent of VM loss.
