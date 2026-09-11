@@ -19,8 +19,14 @@ RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/archive ./cmd/serv
 
 FROM gcr.io/distroless/static-debian12:nonroot
 WORKDIR /app
-COPY --from=build /out/archive /app/archive
-COPY --from=build /src/fixtures /app/fixtures
+
+# LocalStorage may be used by the development environment. Keep its writable
+# area separate from the application binary and fixture files so the runtime
+# user does not need a writable /app directory.
+COPY --from=build --chown=nonroot:nonroot /out/archive /app/archive
+COPY --from=build --chown=nonroot:nonroot /src/fixtures /app/fixtures
+RUN mkdir -p /app/data/storage
+
 USER nonroot:nonroot
 EXPOSE 8080
 ENTRYPOINT ["/app/archive"]
