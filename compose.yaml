@@ -2,7 +2,6 @@ services:
   postgres:
     image: postgres:16-alpine
     restart: unless-stopped
-    network_mode: host
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-archive}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-archive}
@@ -10,29 +9,63 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U archive -d archive -h 127.0.0.1"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-archive} -d ${POSTGRES_DB:-archive} -h 127.0.0.1"]
       interval: 3s
       timeout: 3s
       retries: 10
+    networks:
+      - backend
 
   archive-web:
     build:
       context: .
       dockerfile: Dockerfile
     restart: unless-stopped
-    network_mode: host
     environment:
       APP_ENV: ${APP_ENV:-development}
       APP_ADDR: :8080
       APP_BASE_URL: ${APP_BASE_URL:-http://localhost:8080}
-      DATABASE_URL: ${DATABASE_URL:-postgres://archive:archive@127.0.0.1:5432/archive?sslmode=disable}
+      DATABASE_URL: ${DATABASE_URL:-postgres://archive:archive@postgres:5432/archive?sslmode=disable}
       SESSION_SECRET: ${SESSION_SECRET:-dev-secret-change-in-production-min-32-chars}
       STORAGE_DIR: /app/data/storage
       MAX_UPLOAD_MB: ${MAX_UPLOAD_MB:-25}
       LOG_LEVEL: ${LOG_LEVEL:-info}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_REDIRECT_URL: ${GOOGLE_REDIRECT_URL:-http://localhost:8080/auth/google/callback}
+      GOOGLE_HOSTED_DOMAIN: ${GOOGLE_HOSTED_DOMAIN:-nitc.ac.in}
+      IA_ACCESS_KEY: ${IA_ACCESS_KEY:-}
+      IA_SECRET_KEY: ${IA_SECRET_KEY:-}
+      IA_COLLECTION: ${IA_COLLECTION:-}
+      IA_IDENTIFIER_PREFIX: ${IA_IDENTIFIER_PREFIX:-nitc-resource-vault}
     depends_on:
       postgres:
         condition: service_healthy
+    ports:
+      - "127.0.0.1:8080:8080"
+    networks:
+      - backend
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    profiles: ["production"]
+    depends_on:
+      - archive-web
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - backend
+
+networks:
+  backend:
 
 volumes:
   postgres_data:
+  caddy_data:
+  caddy_config:
