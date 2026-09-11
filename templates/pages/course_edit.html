@@ -4,57 +4,31 @@
   <span class="sep">&rsaquo;</span>
   <a href="/courses/{{ .Course.Code }}">{{ .Course.Code }}</a>
   <span class="sep">&rsaquo;</span>
-  <span>Edit Metadata (Wiki)</span>
+  <span>Edit Metadata</span>
 </div>
-
 <div class="intro-box">
   <h1>Edit {{ .Course.Code }} &mdash; Metadata</h1>
-  <p>Course codes, titles, and department associations are community-maintained like a wiki. Published examination papers and archival files remain unaffected.</p>
+  <p>This is the canonical course metadata editor. Ordinary contributors should use the correction-suggestion flow; direct changes should be limited to authorized moderators/admins.</p>
 </div>
-
-{{ if .Error }}
-<div style="background-color: #fce8e6; border: 1px solid #f5c2be; color: #8c1d18; padding: 12px; margin-bottom: 20px;">
-  <strong>Error:</strong> {{ .Error }}
-</div>
-{{ end }}
-
-<div class="detail-card" style="max-width: 720px;">
-  <form action="/courses/{{ .Course.Code }}/edit" method="POST">
-    <div style="margin-bottom: 14px;">
-      <label for="code" style="display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 4px;">Course Code:</label>
-      <input type="text" id="code" name="code" value="{{ .Course.Code }}" required class="mono" style="font-weight: 700; width: 220px;">
-      <div style="font-size: 0.78rem; color: var(--text-dim); margin-top: 2px;">Standard NITC curriculum code (e.g. CS201, ME203, EC301)</div>
-    </div>
-
-    <div style="margin-bottom: 14px;">
-      <label for="name" style="display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 4px;">Course Name / Subject Title:</label>
-      <input type="text" id="name" name="name" value="{{ .Course.Name }}" required style="width: 100%;">
-    </div>
-
-    <div style="margin-bottom: 16px;">
-      <label for="description" style="display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 4px;">Description / Syllabus Summary:</label>
-      <textarea id="description" name="description" rows="3" style="width: 100%; border: 1px solid var(--border-dark); font-family: inherit; font-size: 0.9rem; padding: 6px;">{{ .Course.Description }}</textarea>
-    </div>
-
-    <div style="margin-bottom: 20px;">
-      <label style="display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 6px;">Associated Departments / Branches:</label>
-      <div style="font-size: 0.78rem; color: var(--text-dim); margin-bottom: 8px;">Check all departments that offer, take, or share this course:</div>
-
-      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 8px; max-height: 260px; overflow-y: auto; background-color: var(--bg-primary); border: 1px solid var(--border-color); padding: 10px;">
+{{ if .Error }}<div class="alert"><strong>Error:</strong> {{ .Error }}</div>{{ end }}
+<div class="detail-card" style="max-width:720px;">
+  <form action="/courses/{{ .Course.Code }}/edit" method="POST" class="form-stack">
+    <div class="form-field"><label for="code">Course Code</label><input type="text" id="code" name="code" value="{{ .Course.Code }}" required class="mono"></div>
+    <div class="form-field"><label for="name">Course Name / Subject Title</label><input type="text" id="name" name="name" value="{{ .Course.Name }}" required></div>
+    <div class="form-field"><label for="description">Description / Syllabus Summary</label><textarea id="description" name="description" rows="3">{{ .Course.Description }}</textarea></div>
+    <div class="form-field">
+      <label>Associated Departments / Academic Units</label>
+      <div class="form-help">Select every unit that offers, takes, or shares this course.</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:8px;max-height:300px;overflow-y:auto;background:var(--bg-primary);border:1px solid var(--border-color);padding:10px;">
         {{ range .Branches }}
-        <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer;">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:.85rem;">
           <input type="checkbox" name="branches" value="{{ .Code }}" {{ if index $.MappedBranchMap .Code }}checked{{ end }}>
-          <span class="mono" style="font-weight: 700; min-width: 50px;">{{ .Code }}</span>
-          <span style="color: var(--text-muted);">{{ .Name }}</span>
+          <span class="mono"><strong>{{ .Code }}</strong></span><span style="color:var(--text-muted);">{{ .Name }}</span>
         </label>
         {{ end }}
       </div>
     </div>
-
-    <div style="display: flex; gap: 8px; align-items: center;">
-      <button type="submit" class="btn btn-primary">Save Wiki Changes</button>
-      <a href="/courses/{{ .Course.Code }}" class="btn">Cancel</a>
-    </div>
+    <div style="display:flex;gap:8px;"><button type="submit" class="btn btn-primary">Save Metadata</button><a href="/courses/{{ .Course.Code }}" class="btn">Cancel</a></div>
   </form>
 </div>
 {{ end }}
