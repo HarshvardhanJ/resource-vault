@@ -1,31 +1,21 @@
-FROM golang:alpine AS build
+# syntax=docker/dockerfile:1
 
-WORKDIR /app
+FROM --platform=$BUILDPLATFORM golang:1.25-alpine AS build
+WORKDIR /src
 
-# Install build dependencies
 RUN apk add --no-cache ca-certificates tzdata
-
 COPY go.mod go.sum ./
 RUN go mod download
-
 COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /bin/archive ./cmd/server
+ARG TARGETOS
+ARG TARGETARCH
+RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -trimpath -ldflags="-s -w" -o /out/archive ./cmd/server
 
-# Final stage
-FROM alpine:3.21
-
+FROM gcr.io/distroless/static-debian12:nonroot
 WORKDIR /app
-
-RUN apk add --no-cache ca-certificates tzdata \
-    && addgroup -S archive && adduser -S archive -G archive \
-    && mkdir -p /app/data/storage && chown -R archive:archive /app
-
-COPY --from=build /bin/archive /app/archive
-COPY --from=build /app/fixtures /app/fixtures
-
-USER archive:archive
-
+COPY --from=build /out/archive /app/archive
+COPY --from=build /src/fixtures /app/fixtures
+USER nonroot:nonroot
 EXPOSE 8080
-
 ENTRYPOINT ["/app/archive"]
