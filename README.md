@@ -1,91 +1,118 @@
-# NITC PYQ Archive
+# NITC Resource Vault
 
 > **Open to read. Verified to contribute. Built to last.**
 
-The **NITC PYQ Archive** is a fast, clean, and durable community-run academic archive for National Institute of Technology Calicut (NITC) students. It organizes previous-year question papers (PYQs) by academic branch, course code, semester, academic year, and examination type.
+**NITC Resource Vault** is a fast, clean, community-run academic archive for National Institute of Technology Calicut (NITC) students. V1 focuses on previous-year question papers (PYQs), organized by academic unit, course, semester, academic year, and examination type.
 
-Built as a single Go modular monolith with server-side rendering (SSR), PostgreSQL metadata, and early-2000s academic aesthetic.
+Built as a single Go modular monolith with server-side rendering (SSR), PostgreSQL metadata, Internet Archive storage for published PDFs, and an intentionally simple early-2000s academic aesthetic.
 
 ---
 
 ## Non-Negotiable Product Principles
 
-1. **Reading is public**: Anyone can browse, preview, and download published question papers without an account.
-2. **Uploading requires verified NITC identity**: Contributions require Google Workspace authentication restricted to the `@nitc.ac.in` domain.
-3. **PostgreSQL owns metadata**: Schema, courses, branches, audit logs, and status machines live in PostgreSQL.
-4. **Internet Archive owns file bytes**: Published PDFs are archived to the Internet Archive (with `ObjectStore` interface abstraction). The container remains stateless.
-5. **SSR First**: Server-rendered HTML with Go templates and minimal vendored HTMX for reactive filtering. No heavy SPA frameworks.
+1. **Reading is public**: Anyone can browse, preview, and download published resources without an account.
+2. **Uploading requires verified NITC identity**: Contributions require Google Workspace authentication restricted to the configured NITC domain.
+3. **PostgreSQL owns metadata**: Courses, academic units, resources, users, moderation state, and audit logs live in PostgreSQL.
+4. **Internet Archive owns published file bytes**: Published PDFs are archived to Internet Archive through the `ObjectStore` abstraction. The app container remains stateless.
+5. **SSR first**: Server-rendered HTML with Go templates and minimal HTMX. No heavy SPA framework.
+6. **Controlled metadata editing**: Students may suggest catalog corrections; reviewers/admins approve canonical changes.
+7. **Moderation first**: An upload is never public merely because it was submitted.
+
+---
+
+## Academic Units
+
+The initial catalog contains all current units supplied for the project:
+
+- B. Arch
+- Biotechnology
+- Chemical Engineering
+- Civil Engineering
+- Computer Science and Engineering
+- Electrical and Electronics Engineering
+- Electronics and Communication Engineering
+- Energy Engineering
+- Engineering Physics
+- Humanities and Social Sciences
+- Materials Science and Engineering
+- Mechanical Engineering
+- Production Engineering
+- 4-year Integrated Teacher Education Programme (ITEP) B.Sc–B.Ed
+
+Courses are **not** restricted to one unit. Common/shared courses use a many-to-many course-to-academic-unit mapping.
 
 ---
 
 ## Quickstart (Docker Compose)
 
-The simplest way to run the complete stack:
-
 ```bash
-# 1. Start the PostgreSQL database and Web application
 docker compose up -d
-
-# 2. Populate initial branches, courses, and sample question papers
-docker compose run --rm archive-web /app/archive -seed
-
-# 3. Access the archive
-open http://localhost:8080
-```
-
-To view logs:
-```bash
-docker compose logs -f archive-web
-```
-
-Check health:
-```bash
 curl http://localhost:8080/healthz
 ```
 
----
+For local development:
 
-## Local Development (Native Go)
-
-### Prerequisites
-- Go 1.22+ installed
-- Docker (for running local PostgreSQL)
-
-### 1. Start Local PostgreSQL
-```bash
-docker compose up -d postgres
-```
-
-### 2. Configure Environment
 ```bash
 cp .env.example .env
+docker compose up -d postgres
+go run ./cmd/server -migrate
+go run ./cmd/server -seed
+go run ./cmd/server
 ```
 
-### 3. Run Migrations and Seed Database
-```bash
-# Run embedded migrations
-go run cmd/server/main.go -migrate
-
-# Seed branches, courses, and sample PYQ documents
-go run cmd/server/main.go -seed
-```
-
-### 4. Start the Application Server
-```bash
-go run cmd/server/main.go
-```
-
-The web server will listen at `http://localhost:8080`.
+The default development server listens on `http://localhost:8080`.
 
 ---
 
-## Running Tests
+## Production Target
 
-Run the test suite covering storage adapters, path traversal protection, academic year math, and duplicate detection:
+Production is designed for **Oracle Cloud Infrastructure (OCI) Always Free**:
 
-```bash
-go test -v ./...
+```text
+OCI Ampere A1 VM
+├── Caddy
+├── Go application
+└── PostgreSQL
+
+Published PDFs
+└── Internet Archive
 ```
+
+PostgreSQL is never exposed to the public internet. Only HTTP/HTTPS (and restricted SSH) should be publicly reachable.
+
+See [`docs/deployment-oci.md`](docs/deployment-oci.md) and [`NITC_RESOURCE_VAULT_SPEC.md`](NITC_RESOURCE_VAULT_SPEC.md) for the deployment and implementation specification.
+
+---
+
+## Internet Archive
+
+Internet Archive is the V1 durable archive for published PDFs. The application database remains the source of truth for catalog and moderation state.
+
+The storage layer is provider-independent:
+
+```text
+internal/storage/
+├── storage.go
+├── local.go
+└── internetarchive.go   # production backend
+```
+
+This lets the project move to MinIO, S3/R2, or another compatible backend later without redesigning the catalog.
+
+Do not commit Internet Archive credentials. Use deployment environment variables/secrets.
+
+---
+
+## Wiki-like Course Metadata
+
+Course information is intentionally community-correctable but not freely writable.
+
+- Any authenticated NITC contributor can **suggest** a correction.
+- Moderators/admins review suggestions.
+- Admins can directly edit canonical metadata.
+- Accepted changes are written to the audit log.
+
+This prevents the catalog from becoming a free-for-all while still allowing students to fix mistakes.
 
 ---
 
@@ -93,31 +120,30 @@ go test -v ./...
 
 ```text
 ├── cmd/
-│   └── server/main.go          # Application entrypoint & CLI flags (-migrate, -seed)
+│   └── server/main.go
 ├── internal/
-│   ├── config/                 # Environment configuration loader
-│   ├── db/                     # Connection pool, embedded migrations, and seeder
-│   │   └── migrations/         # PostgreSQL schema migrations (000001_init.sql)
-│   ├── storage/                # ObjectStore interface & LocalStorage implementation
-│   ├── catalog/                # Branch and Course domain models, repo, service, handler
-│   ├── resources/              # PYQ domain models, search, repo, service, handler
-│   ├── reports/                # Issue reporting domain handler
-│   └── web/                    # Templates renderer, request logging, security middleware
+│   ├── auth/                 # Google OIDC and sessions
+│   ├── catalog/              # Courses + academic units
+│   ├── config/               # Environment configuration
+│   ├── db/                   # PostgreSQL + embedded migrations
+│   ├── reports/              # Resource reporting
+│   ├── resources/            # PYQ resource lifecycle
+│   ├── storage/              # ObjectStore + storage adapters
+│   └── web/                  # SSR templates + middleware
 ├── templates/
-│   ├── layouts/base.html       # Retro academic layout
-│   ├── pages/                  # Home, Branch, Course, Resource, Search, Report, Contribute
-│   └── partials/               # Resource table and HTMX search fragments
+│   ├── layouts/
+│   ├── pages/
+│   └── partials/
 ├── static/
-│   ├── css/main.css            # Custom retro early-2000s academic stylesheet
-│   ├── js/app.js               # Minimal keyboard helpers
-│   └── vendor/htmx.min.js      # Vendored HTMX
+│   ├── css/
+│   └── js/
 ├── fixtures/
-│   └── sample.pdf              # Sample PDF document for testing
-├── tests/                      # Unit and integration tests
+├── tests/
 ├── docs/
-│   └── deployment-oci.md       # Oracle Cloud Infrastructure Always Free runbook
-├── Dockerfile                  # Multi-stage production build
-├── compose.yaml                # Multi-container Compose configuration
+│   └── deployment-oci.md
+├── Dockerfile
+├── compose.yaml
+├── NITC_RESOURCE_VAULT_SPEC.md
 ├── go.mod
 └── go.sum
 ```
@@ -126,10 +152,26 @@ go test -v ./...
 
 ## Implementation Status
 
-- [x] **Phase 0 — Foundation**: Modular Go monolith, PostgreSQL schema, embedded migrations runner, healthz probe, Docker Compose, security headers.
-- [x] **Phase 1 — Public Archive**: Branch browsing, course catalog, filterable PYQ tables, resource detail cards, inline PDF preview, downloads, live HTMX search, seeded NITC branches and sample courses.
-- [ ] **Phase 2 — Google OIDC Authentication**: Institutional `@nitc.ac.in` domain verification and session management.
-- [ ] **Phase 3 — Upload & Validation Pipeline**: PDF magic bytes validator, SHA-256 duplicate checking, upload state machine.
-- [ ] **Phase 4 — Internet Archive Integration**: S3-compatible archival client implementing `ObjectStore`.
-- [ ] **Phase 5 — Moderation & Audit**: Review queue, publishing/rejecting workflow, audit trail.
-- [ ] **Phase 6 — OCI Always Free Production**: Caddy automatic TLS and production deployment.
+- [x] Go modular monolith foundation
+- [x] PostgreSQL + embedded migrations
+- [x] SSR + HTMX foundation
+- [x] Public branch/course/resource browsing
+- [x] NITC academic-unit seed catalog
+- [x] ObjectStore abstraction
+- [ ] Course/academic-unit migration fully adopted throughout the UI
+- [ ] Google OIDC with NITC-domain enforcement
+- [ ] Upload validation + SHA-256 deduplication
+- [ ] Internet Archive production adapter
+- [ ] Moderation/review workflow
+- [ ] Metadata suggestion workflow
+- [ ] Production OCI hardening
+- [ ] Caddy HTTPS deployment
+- [ ] PostgreSQL backup/restore procedure
+
+---
+
+## License / Content Notice
+
+The software license and the rights status of individual academic PDFs are separate concerns. The project should not claim ownership of uploaded exam papers or imply official NITC endorsement without an explicit institutional relationship.
+
+A public report/takedown mechanism is required before a broad public launch.
