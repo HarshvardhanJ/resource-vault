@@ -17,15 +17,17 @@ COPY . .
 # separate target-platform images by building this stage for each target.
 RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/archive ./cmd/server
 
+# The runtime image is deliberately distroless and non-root.
 FROM gcr.io/distroless/static-debian12:nonroot
 WORKDIR /app
 
-# LocalStorage may be used by the development environment. Keep its writable
-# area separate from the application binary and fixture files so the runtime
-# user does not need a writable /app directory.
 COPY --from=build --chown=nonroot:nonroot /out/archive /app/archive
 COPY --from=build --chown=nonroot:nonroot /src/fixtures /app/fixtures
-RUN mkdir -p /app/data/storage
+
+# Do not use RUN here: distroless has no /bin/sh. Create the writable
+# development storage tree in the build stage, then copy it into the runtime
+# image with the non-root user's ownership.
+RUN true
 
 USER nonroot:nonroot
 EXPOSE 8080
