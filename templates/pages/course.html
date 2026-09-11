@@ -10,7 +10,10 @@
 <div class="intro-box">
   <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px;">
     <h1>{{ .Course.Code }} &mdash; {{ .Course.Name }}</h1>
-    <a href="/contribute?course={{ .Course.Code }}" class="btn btn-sm btn-primary">+ Contribute Paper</a>
+    <div style="display: flex; gap: 8px;">
+      <a href="/courses/{{ .Course.Code }}/edit" class="btn btn-sm">Edit Course (Wiki)</a>
+      <a href="/contribute?course={{ .Course.Code }}" class="btn btn-sm btn-primary">+ Contribute Paper</a>
+    </div>
   </div>
   {{ if .Course.Description }}
   <p>{{ .Course.Description }}</p>

@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/nitc-pyq-archive/archive/internal/storage"
+	"github.com/HarshvardhanJ/resource-vault/internal/storage"
 )
 
 type branchSeed struct {
@@ -38,17 +38,20 @@ type resourceSeed struct {
 
 func (db *DB) Seed(ctx context.Context, store storage.ObjectStore) error {
 	branches := []branchSeed{
-		{"CSE", "Computer Science & Engineering"},
-		{"ECE", "Electronics & Communication Engineering"},
-		{"EEE", "Electrical & Electronics Engineering"},
-		{"ME", "Mechanical Engineering"},
-		{"CE", "Civil Engineering"},
-		{"CH", "Chemical Engineering"},
+		{"BARCH", "Bachelor of Architecture (B.Arch.)"},
 		{"BT", "Biotechnology"},
-		{"ARCH", "Architecture & Planning"},
-		{"MATH", "Mathematics"},
-		{"PHY", "Physics"},
-		{"CY", "Chemistry"},
+		{"CH", "Chemical Engineering"},
+		{"CE", "Civil Engineering"},
+		{"CSE", "Computer Science and Engineering"},
+		{"EEE", "Electrical and Electronics Engineering"},
+		{"ECE", "Electronics and Communication Engineering"},
+		{"ENE", "Energy Engineering"},
+		{"EP", "Engineering Physics"},
+		{"HSS", "Humanities and Social Sciences"},
+		{"MSE", "Materials Science and Engineering"},
+		{"ME", "Mechanical Engineering"},
+		{"PE", "Production Engineering"},
+		{"ITEP", "4-year Integrated Teacher Education Programme (ITEP) B.Sc-B.Ed"},
 	}
 
 	branchIDs := make(map[string]uuid.UUID)
@@ -125,7 +128,55 @@ func (db *DB) Seed(ctx context.Context, store storage.ObjectStore) error {
 			Code:        "MA101",
 			Name:        "Mathematics I",
 			Description: "Calculus, multivariable functions, differential equations, linear algebra.",
-			Branches:    []string{"CSE", "ECE", "EEE", "ME", "CE", "CH", "BT"},
+			Branches:    []string{"CSE", "ECE", "EEE", "ME", "CE", "CH", "BT", "BARCH", "ENE", "EP", "MSE", "PE"},
+		},
+		{
+			Code:        "AR101",
+			Name:        "Architectural Design I",
+			Description: "Fundamentals of design, space planning, graphic representation, and composition.",
+			Branches:    []string{"BARCH"},
+		},
+		{
+			Code:        "BT201",
+			Name:        "Biochemistry & Microbiology",
+			Description: "Cellular organization, microbial growth, metabolic pathways, and enzymology.",
+			Branches:    []string{"BT"},
+		},
+		{
+			Code:        "EN201",
+			Name:        "Energy Resources and Conversion",
+			Description: "Renewable energy, solar, wind, biomass, fuel cells, and energy efficiency.",
+			Branches:    []string{"ENE", "ME", "EEE"},
+		},
+		{
+			Code:        "EP201",
+			Name:        "Quantum Mechanics for Engineers",
+			Description: "Wave-particle duality, Schrödinger equation, harmonic oscillator, and semiconductors.",
+			Branches:    []string{"EP"},
+		},
+		{
+			Code:        "HS101",
+			Name:        "Professional Communication & Ethics",
+			Description: "Technical writing, presentation skills, engineering ethics, and intellectual property.",
+			Branches:    []string{"HSS", "CSE", "ECE", "EEE", "ME", "CE", "CH", "BT", "BARCH", "ENE", "EP", "MSE", "PE", "ITEP"},
+		},
+		{
+			Code:        "MS201",
+			Name:        "Structure and Properties of Materials",
+			Description: "Crystal structures, defects, phase diagrams, mechanical behavior of polymers, metals, and ceramics.",
+			Branches:    []string{"MSE", "ME", "PE"},
+		},
+		{
+			Code:        "PE201",
+			Name:        "Manufacturing Processes",
+			Description: "Casting, metal forming, machining, welding, and additive manufacturing.",
+			Branches:    []string{"PE", "ME"},
+		},
+		{
+			Code:        "ED101",
+			Name:        "Foundations of Education",
+			Description: "Philosophical, psychological, and sociological perspectives in contemporary education.",
+			Branches:    []string{"ITEP"},
 		},
 	}
 

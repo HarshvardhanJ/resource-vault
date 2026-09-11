@@ -14,7 +14,10 @@
 
 <div class="section-header">
   <h2>Courses ({{ len .Courses }})</h2>
-  <span class="section-meta mono">{{ .Branch.Code }} Curriculum</span>
+  <div style="display: flex; gap: 12px; align-items: center;">
+    <a href="/courses/new?branch={{ .Branch.Code }}" class="btn btn-sm">+ Add Course (Wiki)</a>
+    <span class="section-meta mono">{{ .Branch.Code }} Curriculum</span>
+  </div>
 </div>
 
 {{ if .Courses }}

@@ -1,4 +1,4 @@
-module github.com/nitc-pyq-archive/archive
+module github.com/HarshvardhanJ/resource-vault
 
 go 1.25.0
 

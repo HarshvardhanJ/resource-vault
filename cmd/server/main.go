@@ -14,14 +14,14 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/nitc-pyq-archive/archive"
-	"github.com/nitc-pyq-archive/archive/internal/catalog"
-	"github.com/nitc-pyq-archive/archive/internal/config"
-	"github.com/nitc-pyq-archive/archive/internal/db"
-	"github.com/nitc-pyq-archive/archive/internal/reports"
-	"github.com/nitc-pyq-archive/archive/internal/resources"
-	"github.com/nitc-pyq-archive/archive/internal/storage"
-	"github.com/nitc-pyq-archive/archive/internal/web"
+	vault "github.com/HarshvardhanJ/resource-vault"
+	"github.com/HarshvardhanJ/resource-vault/internal/catalog"
+	"github.com/HarshvardhanJ/resource-vault/internal/config"
+	"github.com/HarshvardhanJ/resource-vault/internal/db"
+	"github.com/HarshvardhanJ/resource-vault/internal/reports"
+	"github.com/HarshvardhanJ/resource-vault/internal/resources"
+	"github.com/HarshvardhanJ/resource-vault/internal/storage"
+	"github.com/HarshvardhanJ/resource-vault/internal/web"
 )
 
 func main() {
@@ -43,7 +43,7 @@ func main() {
 	logger := slog.New(logHandler)
 	slog.SetDefault(logger)
 
-	logger.Info("starting NITC PYQ Archive",
+	logger.Info("starting NITC Resource Vault",
 		slog.String("env", cfg.AppEnv),
 		slog.String("addr", cfg.AppAddr),
 	)
@@ -99,7 +99,7 @@ func main() {
 	}
 
 	// Template Renderer
-	templatesFS, err := fs.Sub(archive.TemplatesFS, "templates")
+	templatesFS, err := fs.Sub(vault.TemplatesFS, "templates")
 	if err != nil {
 		logger.Error("failed to locate embedded templates", slog.Any("error", err))
 		os.Exit(1)
@@ -133,7 +133,7 @@ func main() {
 	r.Use(middleware.Compress(5))
 
 	// Static Assets
-	staticFS, err := fs.Sub(archive.StaticFS, "static")
+	staticFS, err := fs.Sub(vault.StaticFS, "static")
 	if err != nil {
 		logger.Error("failed to locate embedded static assets", slog.Any("error", err))
 		os.Exit(1)
@@ -165,7 +165,11 @@ func main() {
 	// Public Routes
 	r.Get("/", catalogHandler.HandleHome)
 	r.Get("/branches/{branch}", catalogHandler.HandleBranch)
+	r.Get("/courses/new", catalogHandler.HandleNewCourse)
+	r.Post("/courses/new", catalogHandler.HandleCreateCourse)
 	r.Get("/courses/{course}", catalogHandler.HandleCourse)
+	r.Get("/courses/{course}/edit", catalogHandler.HandleEditCourse)
+	r.Post("/courses/{course}/edit", catalogHandler.HandleUpdateCourse)
 	r.Get("/resources/{id}", resourcesHandler.HandleResourceDetail)
 	r.Get("/resources/{id}/download", resourcesHandler.HandleDownload)
 	r.Get("/resources/{id}/preview", resourcesHandler.HandlePreview)

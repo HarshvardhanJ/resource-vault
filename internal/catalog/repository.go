@@ -2,10 +2,12 @@ package catalog
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -176,3 +178,124 @@ func (r *Repository) SearchCourses(ctx context.Context, query string, limit int)
 	}
 	return courses, rows.Err()
 }
+
+func (r *Repository) UpdateCourse(ctx context.Context, oldCode, newCode, name, description string, branchCodes []string) (*Course, error) {
+	upperOld := strings.ToUpper(strings.TrimSpace(oldCode))
+	upperNew := strings.ToUpper(strings.TrimSpace(newCode))
+	trimmedName := strings.TrimSpace(name)
+	trimmedDesc := strings.TrimSpace(description)
+
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	var courseID uuid.UUID
+	err = tx.QueryRow(ctx, `
+		UPDATE courses
+		SET code = $1, name = $2, description = $3, updated_at = NOW()
+		WHERE UPPER(code) = $4 AND active = TRUE
+		RETURNING id
+	`, upperNew, trimmedName, trimmedDesc, upperOld).Scan(&courseID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrNotFound
+		}
+		return nil, fmt.Errorf("failed to update course: %w", err)
+	}
+
+	// Remove old branch mappings
+	_, err = tx.Exec(ctx, "DELETE FROM course_branches WHERE course_id = $1", courseID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to clear old course branches: %w", err)
+	}
+
+	// Insert new branch mappings
+	for _, bCode := range branchCodes {
+		cleanBCode := strings.ToUpper(strings.TrimSpace(bCode))
+		if cleanBCode == "" {
+			continue
+		}
+		_, err = tx.Exec(ctx, `
+			INSERT INTO course_branches (course_id, branch_id)
+			SELECT $1, id FROM branches WHERE UPPER(code) = $2
+			ON CONFLICT DO NOTHING
+		`, courseID, cleanBCode)
+		if err != nil {
+			return nil, fmt.Errorf("failed to map branch %s to course: %w", bCode, err)
+		}
+	}
+
+	// Audit record
+	meta, _ := json.Marshal(map[string]interface{}{
+		"old_code": upperOld,
+		"new_code": upperNew,
+		"name":     trimmedName,
+		"branches": branchCodes,
+	})
+	_, _ = tx.Exec(ctx, `
+		INSERT INTO audit_events (action, entity_type, entity_id, metadata_json, created_at)
+		VALUES ('COURSE_UPDATED', 'course', $1, $2, NOW())
+	`, courseID, meta)
+
+	if err := tx.Commit(ctx); err != nil {
+		return nil, fmt.Errorf("failed to commit course update: %w", err)
+	}
+
+	return r.GetCourseByCode(ctx, upperNew)
+}
+
+func (r *Repository) CreateCourse(ctx context.Context, code, name, description string, branchCodes []string) (*Course, error) {
+	upperCode := strings.ToUpper(strings.TrimSpace(code))
+	trimmedName := strings.TrimSpace(name)
+	trimmedDesc := strings.TrimSpace(description)
+
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	var courseID uuid.UUID
+	err = tx.QueryRow(ctx, `
+		INSERT INTO courses (code, name, description, active)
+		VALUES ($1, $2, $3, TRUE)
+		RETURNING id
+	`, upperCode, trimmedName, trimmedDesc).Scan(&courseID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to insert course: %w", err)
+	}
+
+	for _, bCode := range branchCodes {
+		cleanBCode := strings.ToUpper(strings.TrimSpace(bCode))
+		if cleanBCode == "" {
+			continue
+		}
+		_, err = tx.Exec(ctx, `
+			INSERT INTO course_branches (course_id, branch_id)
+			SELECT $1, id FROM branches WHERE UPPER(code) = $2
+			ON CONFLICT DO NOTHING
+		`, courseID, cleanBCode)
+		if err != nil {
+			return nil, fmt.Errorf("failed to map branch %s to course: %w", bCode, err)
+		}
+	}
+
+	meta, _ := json.Marshal(map[string]interface{}{
+		"code":     upperCode,
+		"name":     trimmedName,
+		"branches": branchCodes,
+	})
+	_, _ = tx.Exec(ctx, `
+		INSERT INTO audit_events (action, entity_type, entity_id, metadata_json, created_at)
+		VALUES ('COURSE_CREATED', 'course', $1, $2, NOW())
+	`, courseID, meta)
+
+	if err := tx.Commit(ctx); err != nil {
+		return nil, fmt.Errorf("failed to commit course creation: %w", err)
+	}
+
+	return r.GetCourseByCode(ctx, upperCode)
+}
+
