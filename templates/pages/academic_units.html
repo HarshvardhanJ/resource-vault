@@ -1,0 +1,17 @@
+{{ define "content" }}
+<div class="breadcrumb"><a href="/">Home</a><span class="sep">&rsaquo;</span><span>Academic Units</span></div>
+<div class="intro-box">
+  <h1>Academic Units</h1>
+  <p>Departments and programmes used to organize the NITC Resource Vault. Courses may be associated with more than one unit when they are shared.</p>
+</div>
+<div class="section-header"><h2>Units ({{ len .AcademicUnits }})</h2></div>
+<div class="branch-grid">
+{{ range .AcademicUnits }}
+  <a href="/branches/{{ .Code }}" class="branch-card">
+    <span class="branch-code">{{ .Code }}</span>
+    <span class="branch-name">{{ .Name }}</span>
+    <span class="branch-count">{{ .CourseCount }} courses</span>
+  </a>
+{{ end }}
+</div>
+{{ end }}
