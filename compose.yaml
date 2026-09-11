@@ -38,6 +38,11 @@ services:
       IA_SECRET_KEY: ${IA_SECRET_KEY:-}
       IA_COLLECTION: ${IA_COLLECTION:-}
       IA_IDENTIFIER_PREFIX: ${IA_IDENTIFIER_PREFIX:-nitc-resource-vault}
+    volumes:
+      # Local/development object storage. The application remains non-root;
+      # Docker assigns ownership to the named volume rather than requiring
+      # the image filesystem itself to be writable.
+      - resource_storage:/app/data/storage
     depends_on:
       postgres:
         condition: service_healthy
@@ -67,5 +72,6 @@ networks:
 
 volumes:
   postgres_data:
+  resource_storage:
   caddy_data:
   caddy_config:
