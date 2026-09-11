@@ -1,21 +1,21 @@
 {{ define "content" }}
 <div class="intro-box">
   <h1>NITC Resource Vault</h1>
-  <p>An open, fast, and structured academic archive for NIT Calicut. Organized by department, course, semester, academic year, and exam type. Free to browse, preview, and download. Course metadata is community-maintained like a wiki.</p>
+  <p>An open, fast, structured academic archive for NIT Calicut. Browse and download published resources freely; authenticated NITC contributors can help maintain the catalog and submit papers.</p>
 </div>
 
 <div class="search-container">
   <form action="/search" method="GET" class="search-form">
     <div class="search-input-group">
-      <input type="search" name="q" placeholder="Search course code (e.g. CS201), course name, or keyword... [press / to focus]" autofocus>
+      <input type="search" name="q" placeholder="Search course code, course name, or keyword... [press / to focus]" autofocus>
     </div>
     <button type="submit" class="btn btn-primary">Search Archive</button>
   </form>
 </div>
 
 <div class="section-header">
-  <h2>Academic Branches</h2>
-  <span class="section-meta mono">{{ len .Branches }} departments</span>
+  <h2>Academic Units</h2>
+  <span class="section-meta mono">{{ len .Branches }} units</span>
 </div>
 
 <div class="branch-grid">
@@ -30,9 +30,8 @@
 
 <div class="section-header">
   <h2>Recently Added Papers</h2>
-  <a href="/search" class="mono" style="font-size: 0.85rem;">View all &rarr;</a>
+  <a href="/search" class="mono" style="font-size: .85rem;">View all &rarr;</a>
 </div>
 
 {{ template "resource_table.html" .RecentPYQs }}
-
 {{ end }}
