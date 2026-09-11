@@ -2,7 +2,6 @@ package catalog
 
 import (
 	"time"
-
 	"github.com/google/uuid"
 )
 
@@ -25,14 +24,14 @@ type Branch struct {
 }
 
 type Course struct {
-	ID                uuid.UUID      `json:"id"`
-	Code              string         `json:"code"`
-	Name              string         `json:"name"`
-	Description       string         `json:"description"`
-	Active            bool           `json:"active"`
-	CreatedAt         time.Time      `json:"created_at"`
-	UpdatedAt         time.Time      `json:"updated_at"`
-	ResourceCount     int            `json:"resource_count"`
-	Branches          []Branch       `json:"branches"`
-	AcademicUnits     []AcademicUnit `json:"academic_units"`
+	ID            uuid.UUID      `json:"id"`
+	Code          string         `json:"code"`
+	Name          string         `json:"name"`
+	Description   string         `json:"description"`
+	Active        bool           `json:"active"`
+	CreatedAt     time.Time      `json:"created_at"`
+	UpdatedAt     time.Time      `json:"updated_at"`
+	ResourceCount int            `json:"resource_count"`
+	Branches      []Branch       `json:"branches"`
+	AcademicUnits []AcademicUnit `json:"academic_units"`
 }
