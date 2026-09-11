@@ -1,60 +1,30 @@
 {{ define "content" }}
 <div class="breadcrumb">
-  <a href="/">Home</a>
-  <span class="sep">&rsaquo;</span>
-  <span>Courses</span>
-  <span class="sep">&rsaquo;</span>
-  <span>Add New Course (Wiki)</span>
+  <a href="/">Home</a><span class="sep">&rsaquo;</span><span>Courses</span><span class="sep">&rsaquo;</span><span>Add New Course</span>
 </div>
-
 <div class="intro-box">
-  <h1>Add New Course &mdash; Catalog Wiki</h1>
-  <p>Add a new curriculum course to the NITC Resource Vault catalog. Once created, question papers and academic resources can be archived under it.</p>
+  <h1>Add New Course</h1>
+  <p>Canonical course entries are maintained by authorized reviewers/admins. Ordinary NITC contributors should propose new courses or metadata corrections through the moderation workflow.</p>
 </div>
-
-{{ if .Error }}
-<div style="background-color: #fce8e6; border: 1px solid #f5c2be; color: #8c1d18; padding: 12px; margin-bottom: 20px;">
-  <strong>Error:</strong> {{ .Error }}
-</div>
-{{ end }}
-
-<div class="detail-card" style="max-width: 720px;">
-  <form action="/courses/new" method="POST">
-    <div style="margin-bottom: 14px;">
-      <label for="code" style="display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 4px;">Course Code:</label>
-      <input type="text" id="code" name="code" value="{{ .Code }}" required class="mono" style="font-weight: 700; width: 220px;" placeholder="e.g. CS201, ME305, EC301">
-      <div style="font-size: 0.78rem; color: var(--text-dim); margin-top: 2px;">Standard NITC curriculum course code.</div>
-    </div>
-
-    <div style="margin-bottom: 14px;">
-      <label for="name" style="display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 4px;">Course Name / Subject Title:</label>
-      <input type="text" id="name" name="name" value="{{ .Name }}" required style="width: 100%;" placeholder="e.g. Heat and Mass Transfer">
-    </div>
-
-    <div style="margin-bottom: 16px;">
-      <label for="description" style="display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 4px;">Description / Syllabus Summary (Optional):</label>
-      <textarea id="description" name="description" rows="3" style="width: 100%; border: 1px solid var(--border-dark); font-family: inherit; font-size: 0.9rem; padding: 6px;" placeholder="Brief description of the course scope...">{{ .Description }}</textarea>
-    </div>
-
-    <div style="margin-bottom: 20px;">
-      <label style="display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 6px;">Associated Departments / Branches:</label>
-      <div style="font-size: 0.78rem; color: var(--text-dim); margin-bottom: 8px;">Check all departments that offer, take, or share this course:</div>
-
-      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 8px; max-height: 260px; overflow-y: auto; background-color: var(--bg-primary); border: 1px solid var(--border-color); padding: 10px;">
-        {{ range .Branches }}
-        <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer;">
+{{ if .Error }}<div class="alert"><strong>Error:</strong> {{ .Error }}</div>{{ end }}
+<div class="detail-card" style="max-width:720px;">
+  <form action="/courses/new" method="POST" class="form-stack">
+    <div class="form-field"><label for="code">Course Code</label><input type="text" id="code" name="code" value="{{ .Code }}" required class="mono" placeholder="e.g. CS201"></div>
+    <div class="form-field"><label for="name">Course Name</label><input type="text" id="name" name="name" value="{{ .Name }}" required placeholder="e.g. Data Structures"></div>
+    <div class="form-field"><label for="description">Description</label><textarea id="description" name="description" rows="3">{{ .Description }}</textarea></div>
+    <div class="form-field">
+      <label>Academic Units</label>
+      <div class="form-help">A course may be shared across multiple departments/programmes.</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:8px;max-height:300px;overflow-y:auto;background:var(--bg-primary);border:1px solid var(--border-color);padding:10px;">
+      {{ range .Branches }}
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:.85rem;">
           <input type="checkbox" name="branches" value="{{ .Code }}" {{ if index $.MappedBranchMap .Code }}checked{{ end }}>
-          <span class="mono" style="font-weight: 700; min-width: 50px;">{{ .Code }}</span>
-          <span style="color: var(--text-muted);">{{ .Name }}</span>
+          <span class="mono"><strong>{{ .Code }}</strong></span><span style="color:var(--text-muted);">{{ .Name }}</span>
         </label>
-        {{ end }}
+      {{ end }}
       </div>
     </div>
-
-    <div style="display: flex; gap: 8px; align-items: center;">
-      <button type="submit" class="btn btn-primary">Create Course</button>
-      <a href="javascript:history.back()" class="btn">Cancel</a>
-    </div>
+    <div style="display:flex;gap:8px;"><button type="submit" class="btn btn-primary">Create Course</button><a href="/" class="btn">Cancel</a></div>
   </form>
 </div>
 {{ end }}
