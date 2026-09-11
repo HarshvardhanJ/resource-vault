@@ -10,34 +10,25 @@
   <script src="/static/js/app.js" defer></script>
 </head>
 <body>
-  <header class="site-header">
-    <div class="container header-inner">
-      <div class="brand-title">
-        <a href="/" class="brand-name">NITC RESOURCE VAULT</a>
-        <span class="brand-badge">ACADEMIC ARCHIVE</span>
-      </div>
-      <nav class="site-nav" aria-label="Main Navigation">
-        <a href="/" class="nav-link">Home</a>
-        <a href="/search" class="nav-link">Search</a>
-        <a href="/contribute" class="nav-link" title="Requires a verified NITC Google account">Contribute</a>
-      </nav>
+<header class="site-header">
+  <div class="container header-inner">
+    <div class="brand-title">
+      <a href="/" class="brand-name">NITC RESOURCE VAULT</a>
+      <span class="brand-badge">ACADEMIC ARCHIVE</span>
     </div>
-  </header>
-
-  <main class="main-content">
-    <div class="container">
-      {{ template "content" . }}
-    </div>
-  </main>
-
-  <footer class="site-footer">
-    <div class="container">
-      <p><strong>NITC Resource Vault</strong> — independent student &amp; community-run academic archive for NIT Calicut.</p>
-      <p>Principle: <em>Open to read. Verified to contribute. Built to last.</em></p>
-      <div class="disclaimer-box">
-        Independent student project; not officially affiliated with, sponsored by, or endorsed by the National Institute of Technology Calicut unless explicitly stated. Use the resource report/takedown mechanism to flag inaccurate metadata or disputed material.
-      </div>
-    </div>
-  </footer>
+    <nav class="site-nav" aria-label="Main Navigation">
+      <a href="/" class="nav-link">Home</a>
+      <a href="/academic-units" class="nav-link">Academic Units</a>
+      <a href="/search" class="nav-link">Search</a>
+      <a href="/contribute" class="nav-link">Contribute</a>
+    </nav>
+  </div>
+</header>
+<main class="main-content"><div class="container">{{ template "content" . }}</div></main>
+<footer class="site-footer"><div class="container">
+  <p><strong>NITC Resource Vault</strong> — independent student &amp; community-run academic archive for NIT Calicut.</p>
+  <p>Principle: <em>Open to read. Verified to contribute. Built to last.</em></p>
+  <div class="disclaimer-box">Independent student project; not officially affiliated with, sponsored by, or endorsed by the National Institute of Technology Calicut unless explicitly stated. Use the resource report/takedown mechanism to flag inaccurate metadata or disputed material.</div>
+</div></footer>
 </body>
 </html>
