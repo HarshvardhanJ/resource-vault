@@ -1,0 +1,5 @@
+# Copy this to deploy/Caddyfile on the OCI VM and replace the hostname.
+example.nitc-resource-vault.org {
+    encode zstd gzip
+    reverse_proxy 127.0.0.1:8080
+}
